@@ -2,29 +2,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-int main() {
-  FILE *fp = fopen("passphrases.txt", "r");
-  if (fp == NULL) {
-    return -1;
-  }
+#include "../utils/read-tokenized.h"
 
-  char *line = NULL;
-  size_t len = 0;
-  ssize_t read;
+int main() {
+  struct TokenizedReader* reader = makereader("passphrases.txt", " ");
+
   int numValid = 0;
 
-  while ((read = getline(&line, &len, fp)) != -1) {
-    if (line[read - 1] == '\n') {
-      line[read - 1] = '\0';
-    }
-
+  while (nextline(reader) != -1) {
     int isValid = 1;
     char *words[32];
     int usedSlots = 0;
     memset(words, 0, sizeof(words[0]) * 32);
 
-    char *tok = strtok(line, " ");
-    while (tok != NULL) {
+    char *tok = NULL;
+    while ((tok = nexttoken(reader)) != NULL) {
       int toklen = strlen(tok);
       char *cpy = malloc(toklen + 1);
       // part 1:
@@ -67,8 +59,6 @@ int main() {
 
       words[usedSlots] = cpy;
       usedSlots++;
-
-      tok = strtok(NULL, " ");
     }
 
     if (isValid == 1) {
@@ -82,10 +72,7 @@ int main() {
 
   printf("Number of valid passphrases: %d\n", numValid);
 
-  fclose(fp);
-  if (line) {
-    free(line);
-  }
+  freereader(reader);
 
   return 0;
 }
